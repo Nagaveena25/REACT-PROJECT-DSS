@@ -46,7 +46,12 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   // const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
+const [fileUploadData, setFileUploadData] = useState({
+    file: null,
+    filePreview: null,
+  });
 
+ 
   const [activeTab, setActiveTab] = useState('notes');
   const [currentStep, setCurrentStep] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,19 +63,46 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
   };
 
 
+   // Handle file selection and preview
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFileUploadData({
+        ...formData,
+        file,
+        filePreview: URL.createObjectURL(file),
+      });
+    }
+  };
+
+  
+  const generateRandomNumber = (length = 6) => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    // console.log("RESULT", result);
+    return result;
+  };
+
+
   useEffect(()=>{
+    setFormData({ ...formData, number: generateRandomNumber() });
     // console.log("editid", editId)
     if(editId !== null || editId !== "")
       getFieldsData() 
   },[editId])
+
+
   // Handle selected file
-  const handleFileChange = (event : any) => {
-    const file = event.target.files[0];
-    if (file) {
-      // console.log("Selected file:", file);
-      // You can now upload the file or preview it
-    }
-  };
+  // const handleFileChange = (event : any) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     // console.log("Selected file:", file);
+  //     // You can now upload the file or preview it
+  //   }
+  // };
 
   const steps = [
     'Detection and Recording',
@@ -131,7 +163,7 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
   //   e.preventDefault();
   //   onSubmit({
   //     ...formData,
-  //     number: INC${Math.floor(Math.random() * 10000).toString().padStart(4, '0')},
+  //     number: `INC${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
   //     status: 'New',
   //     opened: new Date().toISOString(),
   //     priority: formData.priority as Incident['priority'],
@@ -210,6 +242,7 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
     if(res.status ===  201){
       resetFormdata();
       toast.success("Data Submitted Successfully");
+      window.location.href = "/";
     }else{
       toast.error("Error Submitting the Form");
     }
@@ -217,6 +250,7 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
     const update = await axios.post("http://localhost:5000/api/form/update", {formData : formData, Id: editId});
     // console.log("Update", update);
     toast.success("Data Updated Successfully");
+    window.location.href = "/";
   }
   
 
@@ -224,7 +258,7 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
   // Submit if all good
   // onSubmit({
   //   ...formData,
-  //   number: INC${Math.floor(Math.random() * 10000).toString().padStart(4, '0')},
+  //   number: `INC${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
   //   status: 'New',
   //   opened: new Date().toISOString(),
   //   priority: formData.priority as Incident['priority'],
@@ -265,6 +299,7 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
 
 
 
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center pt-8 z-50">
       <div className="bg-white w-full max-w-6xl mx-4 rounded-lg shadow-xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -284,16 +319,15 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleButtonClick} className="p-2 hover:bg-blue-100 rounded">
+            {/* <button onClick={handleButtonClick} className="p-2 hover:bg-blue-100 rounded">
               <Paperclip size={20} />
-              {/* Hidden file input */}
               <input
                 type="file"
                 ref={fileInputRef}
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-            </button>
+            </button> */}
             <button className="p-2 hover:bg-blue-100 rounded">
               <MoreHorizontal size={20} />
             </button>
@@ -338,12 +372,12 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
                   type="text"
                   // value="Auto-generated"
                   value={formData.number}
-                    onChange={(e) => {
-                      setFormData({ ...formData, number: e.target.value });
-                      // setErrors({ ...errors, caller: false }); // clear error on change
-                    }}
-                    
-                    // disabled={!!editId}  
+                    // onChange={(e) => {
+                    //   // const num = generateRandomNumber();
+                    //   setFormData({ ...formData, number: num });
+                    //   // setErrors({ ...errors, caller: false }); // clear error on change
+                    // }}
+                    disabled  
                   className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-500"
                 />
               </div>
@@ -385,6 +419,29 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+
+               <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload File
+                </label>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              {fileUploadData.filePreview && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500">File Preview:</p>
+                  <img
+                    src={fileUploadData.filePreview}
+                    alt="Preview"
+                    className="mt-2 w-40 h-40 object-cover rounded"
+                  />
+                </div>
+              )}
+
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
@@ -571,7 +628,7 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
             {/* Right Column */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Opened</label>
+                {/* <label className="block text-sm font-medium text-gray-700 mb-1">Opened</label>
                 <input
                   //type="text"
                    type="datetype-local"
@@ -585,7 +642,17 @@ const NewIncidentModal: React.FC<NewIncidentModalProps> = ({ isOpen, onClose, on
                   placeholder='2025-09-25'
                   //type="datetype-local"
                   className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-500"
-                />
+                /> */}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Opened</label>
+                  <input
+                    type="date"  // <-- Correct input type for calendar date picker
+                    value={formData.opened || ""}  // make sure to handle undefined/null
+                    onChange={(e) => {
+                      setFormData({ ...formData, opened: e.target.value });  // value will be in 'YYYY-MM-DD' format
+                    }}
+                    placeholder="2025-09-25"
+                    className="w-full px-3 py-2 border border-gray-300 rounded bg-white text-gray-700"
+                  />
               </div>
 
               <div>
