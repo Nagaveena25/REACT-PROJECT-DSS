@@ -5,6 +5,8 @@ import { Incident } from '../types';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
+//console.log(10)
+
 interface NewIncidentModalProps {
   isOpen: boolean;
   onClose: () => void;
