@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 
 //console.log(10)
+console.log("hi");
 
 interface NewIncidentModalProps {
   isOpen: boolean;
